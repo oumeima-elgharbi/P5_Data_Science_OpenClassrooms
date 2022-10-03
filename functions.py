@@ -113,8 +113,83 @@ def display_boxplot(df, width=8, height=6):
         position = int('13{}'.format(i + 1))
         ax = fig.add_subplot(position)
 
-        bp = sns.boxplot(data=df[variable]) # showfliers=False
+        bp = sns.boxplot(data=df[variable])  # showfliers=False
         bp.set_title(variable)
 
     plt.tight_layout()
     plt.show()
+
+
+def order_cluster(data_frame, col_cluster_name, col_name, nb_clusters, ascending):
+    """
+    Orders the names of the clusters for one column. So that the cluster 3 contains the best values.
+    if nb_clusters = 4 : Cluster 0 < cluster 1 < cluster 2 < cluster 3
+
+    :param data_frame: (DateFrame)
+    :param col_cluster_name: (string)
+    :param col_name: (string)
+    :param nb_clusters: (int)
+    :param ascending: (True or False)
+    :return: a copy of data_frame with ordered clusters.
+    :rtype: DataFrame
+    """
+    df = data_frame.copy()
+
+    print("Before")
+    display(df[[col_cluster_name, col_name]].groupby(col_cluster_name).describe())
+
+    # step 1.1 : we get the minimum value for each cluster
+    order = {}
+    for nb_cls in range(nb_clusters):
+        cls_min = df[df[col_cluster_name] == nb_cls].min()
+        order[nb_cls] = cls_min[col_name]
+
+    # step 1.2 : we make a list that contains the n° of the cluster and its min value
+    cluster_number_min = [(order[key], key) for key in order.keys()]
+    # True / increasing order
+    if ascending:
+        cluster_number_min.sort()  # print(l)
+    # decreasing order
+    else:
+        cluster_number_min.sort(reverse=True)  # print(l)
+
+    # step 2
+    order_cluster = {}
+    for nb_cls in range(nb_clusters):
+        order_cluster[cluster_number_min[nb_cls][1]] = nb_cls  # print(order_cluster)
+
+    # step 3 : we map the clusters with the correct order
+    df[col_cluster_name] = df[col_cluster_name].map(order_cluster)
+
+    # verification
+    print("After")
+    display(df[[col_cluster_name, col_name]].groupby(col_cluster_name).describe())
+
+    return df
+
+
+def apply_kmeans_per_column(data_frame, all_columns, kmeans_clustering, n_clusters):
+    """
+
+    :param data_frame: (DataFrame)
+    :param all_columns: (list)
+    :param kmeans_clustering: (K-Means)
+    :param n_clusters: (int)
+    :return:
+    """
+    df = data_frame.copy()
+
+    for col in all_columns:
+        if col == 'Recency':
+            kmeans_clustering.fit(df[[col]])
+            df[col +'_cluster'] = kmeans_clustering.predict(df[[col]])
+            df = order_cluster(df, col +'_cluster', col, n_clusters, False)
+        else:
+            kmeans_clustering.fit(df[[col]])
+            df[col +'_cluster'] = kmeans_clustering.predict(df[[col]])
+            df = order_cluster(df, col +'_cluster', col, n_clusters, True)
+
+    return df
+
+# Applying the condition
+## data_frame.loc[data_frame[feature] == old_value, feature] = new_value
