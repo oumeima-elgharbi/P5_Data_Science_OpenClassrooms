@@ -5,6 +5,8 @@ import seaborn as sns
 import datetime as dt
 from dateutil.relativedelta import relativedelta
 
+from sklearn.preprocessing import StandardScaler
+
 from os import listdir
 from os.path import isfile, join
 
@@ -217,38 +219,3 @@ def create_rfm_dataset(df, time_limit):
                                                'price': 'Monetary'}) #, inplace = True)
     return rfm_dataset
 
-
-def simulate_dataset(df, nb_days, nb_periods, output_path):
-    """
-    Creates simulation datasets as global variables
-    Saves simulation datasets as csv files
-    :param df:
-    :param nb_days:
-    :param nb_periods:
-    :param output_path:
-    :return: None
-    :rtype: None
-    """
-    for index, i in enumerate(range(nb_periods, -1, -1)): # A month = 15 days x 2 so 6 months needs 12 iterations
-
-        # 1) Time limit
-        time_limit = max(df.order_purchase_timestamp) + relativedelta(days=-nb_days * i)
-        print("\n\n\nStep :", index + 1, "Maximum order purchase date :", time_limit, end='\n')
-
-        # 2) filtering dataset based on time limit date
-        data_previous = df.copy()
-        filter_date = data_previous["order_purchase_timestamp"] <= time_limit
-        data_previous = data_previous[filter_date]
-        print("Verification of the filter :", max(data_previous.order_purchase_timestamp))
-
-        # 3) Create a RFM dataset
-        rfm_previous = create_rfm_dataset(data_previous, time_limit)
-
-        # 4) we save the dataset in the global variables
-        globals()["rfm_T" + str(index)] = rfm_previous
-        # 5) save csv
-        rfm_previous.to_csv(output_path + "rfm_T" + str(index))#, index=False)
-
-        print("This dataset has {} unique clients".format(rfm_previous.shape[0]))
-        #display(rfm_previous.head(2))
-        #display(rfm_previous.info())
