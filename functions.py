@@ -198,20 +198,23 @@ def apply_kmeans_per_column(data_frame, all_columns, kmeans_clustering, n_cluste
 
 def create_rfm_dataset(df, time_limit):
     """
+    Converts "order_purchase_timestamp" to datetime object
     Returns a RFM dataset in which the Recency is computed based on the time_limit timestamp
     :param df: (DataFrame)
     :param time_limit: (datetime)
     :return:
     :rtype: (DataFrame)
     """
-    grouped_df = df.groupby('customer_unique_id').agg({'order_purchase_timestamp' : lambda x: (time_limit - x.max()).days,
-                                                       'order_id' : pd.Series.nunique,
-                                                       'price' : 'sum',
+    df['order_purchase_timestamp'] = pd.to_datetime(df['order_purchase_timestamp'].astype(str), format='%Y/%m/%d')
+
+    grouped_df = df.groupby('customer_unique_id').agg({'order_purchase_timestamp': lambda x: (time_limit - x.max()).days,
+                                                       'order_id': pd.Series.nunique,
+                                                       'price': 'sum',
                                                        })
     # Rename columns
-    rfm_dataset = grouped_df.rename(columns = {'order_purchase_timestamp' : 'Recency',
-                                               'order_id' : 'Frequency',
-                                               'price' : 'Monetary'}) #, inplace = True)
+    rfm_dataset = grouped_df.rename(columns = {'order_purchase_timestamp': 'Recency',
+                                               'order_id': 'Frequency',
+                                               'price': 'Monetary'}) #, inplace = True)
     return rfm_dataset
 
 
