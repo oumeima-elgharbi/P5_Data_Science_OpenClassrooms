@@ -97,11 +97,13 @@ def run_simulation(nb_periods, kmeans_cls_T0, results, experiment_nb):
 
         # 3) Clustering
         # new clustering
+        print("We make a new clustering using that fits the new dataset.")
         kmeans_cls_new = KMeans(n_clusters=5, verbose=0, random_state=0)
         kmeans_cls_new.fit(X_std)
         print(kmeans_cls_new)
 
         # with initial clustering
+        print("We predict a clustering using the clustering at T0 for the new dataset.")
         kmeans_cls_init = kmeans_cls_T0.predict(X_std)
 
         # 3) evaluation ARI
