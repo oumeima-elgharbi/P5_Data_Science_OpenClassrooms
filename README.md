@@ -1,24 +1,63 @@
-# P5_Data_Science_OpenClassrooms
+# Project 5 Data Science OpenClassrooms
 
-1) Clustering => boxplot, radar plot / comparer les différents clusters
-2) Features RFM / modélisation puis repasser sur le dataset
+## Unsupervised Learning : Clustering
 
-review score moyen
-différence entre date d'achat et de livraison
-retard de livraison (delta entre date prévue et effectuée)
+Author : Oumeima EL GHARBI.
 
-après clustering : maintenance de la modélisation
+Date : September, October 2022.
 
-source : https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce?resource=download
+### Context
 
+We have dataset provided by Olist, the largest department store in Brazilian marketplaces, and we want to make a **Customer Segmentation**.
+This is a project about **Unsupervised Learning** in which we will use **Clustering Algorithms**.
 
-## Context
-This dataset was generously provided by Olist, the largest department store in Brazilian marketplaces. Olist connects small businesses from all over Brazil to channels without hassle and with a single contract. Those merchants are able to sell their products through the Olist Store and ship them directly to the customers using Olist logistics partners. See more on our website: www.olist.com
+Using a RFM Segmentation, we have tried these clustering algorithms :
 
-After a customer purchases the product from Olist Store a seller gets notified to fulfill that order. Once the customer receives the product, or the estimated delivery date is due, the customer gets a satisfaction survey by email where he can give a note for the purchase experience and write down some comments.
+- Centroid-based Clustering : **K-Means**
+- Hierarchical Clustering : **Agglomerative Clustering**
+- Density-based Clustering : **DBSCAN**
 
-## Attention
+We also computed a RFM (Recency, Frequency, Monetary) Score and tried a Segmentation based on Personae.
+
+### Dataset folder
+
+- Create a folder **dataset**
+
+- Create a folder **dataset/source**
+- Create a folder **dataset/cleaned**
+- Create a folder **dataset/simulation**
+
+- Create a folder **dataset/simulation/experiment_1**
+- Create a folder **dataset/simulation/experiment_2**
+
+- Download the zip folder at this address and unzip it in the **source** folder :
+  https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce/download?datasetVersionNumber=2
+
+Source  : https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce
+
+#### Attention from the data source
+
 An order might have multiple items.
 Each item might be fulfilled by a distinct seller.
 All text identifying stores and partners where replaced by the names of Game of Thrones great houses.
 
+
+### Model folders
+
+- Create a folder **model**
+
+### Libraries
+
+Install the python libraries with the same version :
+
+```bash
+pip install -r requirements.txt
+```
+
+### Execution
+
+```bash
+run P5_01_exploration.ipynb
+run P5_02_essais.ipynb
+run P5_03_simulation.ipynb
+```
