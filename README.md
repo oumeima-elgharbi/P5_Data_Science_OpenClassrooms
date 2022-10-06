@@ -61,3 +61,13 @@ run P5_01_exploration.ipynb
 run P5_02_essais.ipynb
 run P5_03_simulation.ipynb
 ```
+
+### Try-outs
+
+We have tried different segmentation modelling.
+1) HCA : not working because of running time
+2) DBSCAN : not working because of running time and structure of the data
+3) KMeans RFM : nice results =>> presentation
+4) Kmeans RFM and Review Score : nice results =>> presentation
+5) RFM Score using KMeans : interesting but method "Kmeans RFM and Review Score" preferred 
+6) Persona using KMeans : interesting but method "Kmeans RFM and Review Score" preferred
