@@ -1,22 +1,25 @@
 import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
 
 from dateutil.relativedelta import relativedelta
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics import adjusted_rand_score
 from sklearn.cluster import KMeans
+from sklearn.metrics import confusion_matrix
+
+import pickle
 
 from functions import create_rfm_dataset
-
-# to compute time of pipeline
-from time import time, strftime, gmtime
 
 import warnings
 
 # warnings.filterwarnings(action="ignore")
 warnings.filterwarnings(action="once")
 
-#global simulation_results
-#simulation_results = pd.DataFrame({})
+
+# global simulation_results
+# simulation_results = pd.DataFrame({})
 
 
 def simulate_dataset(df, nb_days, nb_periods, output_path, experiment_nb):
@@ -27,6 +30,7 @@ def simulate_dataset(df, nb_days, nb_periods, output_path, experiment_nb):
     :param nb_days:
     :param nb_periods:
     :param output_path:
+    :param experiment_nb:
     :return: None
     :rtype: None
     """
@@ -58,10 +62,10 @@ def simulate_dataset(df, nb_days, nb_periods, output_path, experiment_nb):
 def evaluate_simulation(results, time, cls_init, cls_new):
     """
 
-    :param simulation_results:
+    :param results:
     :param time:
-    :param cls_init:  (np array)
-    :param cls_new:  (np array)
+    :param cls_init:
+    :param cls_new:
     :return:
     """
     print("ARI for T = {}".format(time))  # name Pandas Series
@@ -70,18 +74,24 @@ def evaluate_simulation(results, time, cls_init, cls_new):
     results = pd.concat([results, pd.DataFrame({"T": [time],
                                                 "ARI": [ARI]})], ignore_index=True)
 
-    #results = results.sort_values(by=["ARI"], ascending=False)
+    # results = results.sort_values(by=["ARI"], ascending=False)
     display(results)
     return results
 
 
-def run_simulation(nb_periods, kmeans_cls_T0, results, experiment_nb):
+def run_simulation(nb_periods, kmeans_cls_T0, results, experiment_nb, nb_clusters):
     """
 
     :param nb_periods:
     :param kmeans_cls_T0:
+    :param results:
+    :param experiment_nb:
     :return:
     """
+    # we get the scaler at T0
+    scaler_filename = './model/simulation/experiment_{}/scaler_T0.pkl'.format(str(experiment_nb))
+    with open(scaler_filename, 'rb') as f:
+        scaler_T0 = pickle.load(f)
 
     for t in range(1, nb_periods + 1):
         print("\n\n\nFor T =", t)
@@ -90,23 +100,65 @@ def run_simulation(nb_periods, kmeans_cls_T0, results, experiment_nb):
         X = globals()["exp_{}_rfm_T{}".format(experiment_nb, str(t))]
 
         # 2) we scale the features
+        # 2.1) New Standard Scaler
         X_std = X.copy()
         scaler = StandardScaler()
         X_std[X_std.columns] = scaler.fit_transform(X_std)
         print(X_std.shape)
 
+        # 2.2) Using the scaler from T0
+        X_std_scaler_T0 = X.copy()
+        X_std_scaler_T0[X_std_scaler_T0.columns] = scaler_T0["scaler_T0"].transform(X_std_scaler_T0[X_std_scaler_T0.columns])
+
         # 3) Clustering
-        # new clustering
+        # 3.1) new clustering
         print("We make a new clustering using that fits the new dataset.")
-        kmeans_cls_new = KMeans(n_clusters=5, verbose=0, random_state=0)
+        kmeans_cls_new = KMeans(n_clusters=nb_clusters, verbose=0, random_state=0)
         kmeans_cls_new.fit(X_std)
         print(kmeans_cls_new)
 
-        # with initial clustering
+        # 3.2) with initial clustering
         print("We predict a clustering using the clustering at T0 for the new dataset.")
-        kmeans_cls_init = kmeans_cls_T0.predict(X_std)
+        kmeans_cls_init = kmeans_cls_T0.predict(X_std_scaler_T0)
 
-        # 3) evaluation ARI
+        # 4.1) evaluation ARI
         results = evaluate_simulation(results, time=t, cls_init=kmeans_cls_init,
-                                                 cls_new=kmeans_cls_new.labels_)
+                                      cls_new=kmeans_cls_new.labels_)
+
+        # 4.2) evaluation Confusion Matrix
+        matrix = confusion(y_true=kmeans_cls_init, y_pred=kmeans_cls_new.labels_)
+        display(matrix)
+
     return results
+
+
+def confusion(y_true, y_pred):
+    """
+    Displays a fancy confusion matrix
+    :param y_test:
+    :param y_pred:
+    :return:
+    """
+    mat = confusion_matrix(y_true, y_pred) # a numpy array
+    mat = pd.DataFrame(mat)
+    mat.columns = [f"pred_{i}" for i in mat.columns]
+    mat.index = [f"true_{i}" for i in mat.index]
+
+    return mat
+
+
+def display_ARI_nb_days(simulation_results, nb_days):
+    """
+
+    :param simulation_results:
+    :param nb_days:
+    :return:
+    """
+    sns.lineplot(data=simulation_results, x="T", y="ARI")
+    # specifying horizontal line type
+    plt.axhline(y=0.8, color='r', linestyle='-')
+
+    plt.xlabel('The simulation period T, if T = 1, then we added {} days to T0.'.format(nb_days))
+    plt.ylabel('ARI score')
+    plt.title('ARI score as a function of the simulation period')
+    plt.axis('tight')
